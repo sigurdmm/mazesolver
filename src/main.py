@@ -1,4 +1,5 @@
 import math
+import os
 import sys
 import heapq
 
@@ -21,11 +22,11 @@ class Node:
         return str((self.x, self.y))
 
 
-def file_loader(filename):
+def file_loader(filepath):
     try:
-        f = open(filename)
+        f = open(filepath)
     except IOError:
-        print('Error loading ' + filename)
+        print('Error loading ' + filepath)
         raise
     with f:
         return f.read().splitlines()
@@ -84,8 +85,8 @@ def heuristics(x1, y1, goal_node):
 
 
 # Prints table of the manhattan values
-def h_string(filename):
-    file = file_loader(filename)
+def h_string(filepath):
+    file = file_loader(filepath)
     loaded_array, start, end = parse_file(file)
     for line in loaded_array:
         temp_str = ""
@@ -93,7 +94,8 @@ def h_string(filename):
             temp_str += str(node) + " "
         print(temp_str)
 
-#h_string("board-1-1.txt")
+
+h_string("static/board-1-1.txt")
 
 
 def find_neighbours(nodes, node):
@@ -128,6 +130,6 @@ def a_star(node_array, start, goal):
     current = start
     open_set.add(current)
 
-    #while len(open_set) > 0:
+    # while len(open_set) > 0:
 
 
