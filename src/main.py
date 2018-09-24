@@ -1,5 +1,6 @@
-import math
 import heapq
+import math
+from PIL import Image
 
 _wall_symbol = '#'
 _start_symbol = 'A'
@@ -38,10 +39,6 @@ class AStar(object):
 
     @staticmethod
     def file_loader(file_path):
-        """
-        :param file_path:the file path to the file of the maze
-        :return: list of each row in the maze
-        """
         try:
             f = open(file_path)
         except IOError:
@@ -92,14 +89,6 @@ class AStar(object):
     def heuristics(self, node):
         return abs(node.x - self.goal.x) + abs(node.y - self.goal.y)
 
-    # Prints table of the manhattan values
-    def print_h_maze(self):
-        for line in self.maze:
-            temp_str = ""
-            for node in line:
-                temp_str += str(node.wall) + " "
-            print(temp_str)
-
     def get_neighbors(self, node):
         neighbors = []
 
@@ -121,9 +110,6 @@ class AStar(object):
             #West node
             neighbors.append(self.maze[node.y][node.x - 1])
 
-    # Set or update heuristic value of each neighbor node
-    # for neighbor in neighbors:
-    #    update_g(node, neighbor)
         return neighbors
 
     @staticmethod
@@ -131,9 +117,8 @@ class AStar(object):
         to_node.g = from_node.g + 1
         to_node.parent = from_node
         to_node.f = to_node.g + to_node.h
-        # print_h_maze("static/board-1-1.txt")
 
-    def render_maze(self):
+    def render_terminal(self):
         for row in self.maze:
             string = ""
             for node in row:
@@ -142,6 +127,34 @@ class AStar(object):
                 else:
                     string += node.symbol
             print(string)
+
+    def render_graphics(self):
+
+        scale = 3
+
+        img = Image.new('RGB', (len(self.maze[0])*scale, len(self.maze)*scale), "white")
+        pixels = img.load()
+        center_pixel = math.floor(scale/2)
+
+        for i, row in enumerate(self.maze):
+            for j, node in enumerate(row):
+                if node.symbol == '#':
+                    self.scale_graphics(pixels, i, j, (105,105,105), scale)
+                if node.is_in_path:
+                    pixels[j* scale + center_pixel, i*scale+center_pixel] = (0, 0, 255)
+
+        # start
+        self.scale_graphics(pixels,self.start.y, self.start.x,(0, 255, 0), scale)
+        # goal
+        self.scale_graphics(pixels, self.goal.y, self.goal.x, (255, 0, 0), scale)
+
+        img.show()
+
+    @staticmethod
+    def scale_graphics(pixels, i, j, color, scale):
+        for n in range(scale):
+            for m in range(scale):
+                pixels[scale * j + n, scale * i + m] = color
 
     def process(self):
         # Add start node to heap
@@ -152,8 +165,6 @@ class AStar(object):
             self.closed.add(node)
 
             if node is self.goal:
-                print('GOOOOOAL')
-
                 path = []
                 p = node
                 while p is not None:
@@ -162,9 +173,8 @@ class AStar(object):
                     p = p.parent
 
                 path.reverse()
-                self.render_maze()
-                print()
-                self.print_h_maze()
+                self.render_terminal()
+                self.render_graphics()
                 #print([str(node.x) + "." + str(node.y) for node in path])
 
             neighbors = self.get_neighbors(node)
@@ -178,8 +188,10 @@ class AStar(object):
                         self.update_node(node, neighbor)
                         heapq.heappush(self.opened, (neighbor.f, neighbor))
 
-a_star = AStar("static/board-1-1.txt")
-a_star.process()
+
+if __name__ == '__main__':
+    a_star = AStar("static/board-1-1.txt")
+    a_star.process()
 
     # http://mat.uab.cat/~alseda/MasterOpt/AStar-Algorithm.pdf
     # https://www.redblobgames.com/pathfinding/a-star/introduction.html
