@@ -8,7 +8,6 @@ class FileLoadTests(unittest.TestCase):
             file_loader("nonExistingFileName")
 
 
-
 class NodeTests(unittest.TestCase):
 
     def test_if_goal_node(self):
@@ -18,6 +17,7 @@ class NodeTests(unittest.TestCase):
     # def test_init_node_without_args(self):
     #     with self.assertRaises(TypeError):
     #         node = Node()
+
 
 class AStarTests(unittest.TestCase):
     node_1 = Node(0, 0, '.')
@@ -46,6 +46,7 @@ class AStarTests(unittest.TestCase):
             find_neighbours(self.nodes, self.node_outside_x)
         with self.assertRaises(ValueError):
             find_neighbours(self.nodes, self.node_outside_y)
+
 
 if __name__ == '__main__':
     unittest.main()
