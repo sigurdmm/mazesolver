@@ -14,6 +14,7 @@ class Node:
         self.symbol = symbol
         self.parent = None
         self.wall = False
+        self.is_in_path = False
         self.h = 0
         self.g = 0
         self.f = 0
@@ -67,6 +68,8 @@ class AStar(object):
                     self.start = node
                 elif symbol == 'B':
                     self.goal = node
+                elif symbol == '#':
+                    node.wall = True
                 x += 1
             nodes.append(maze_row)
             x = 0
@@ -83,24 +86,18 @@ class AStar(object):
     def assign_heuristics(self):
         for line in self.maze:
             for node in line:
-                # If node is an impassable wall, set math.inf as a sentinel heuristic value
-                if node == '#':
-                    node.wall = True
-                else:
-                    node.h = self.heuristics(node, self.goal)
+                node.h = self.heuristics(node, self.goal)
 
     # Generate manhattan heuristic from  coordinates of current node and goal node
     def heuristics(self, node):
         return abs(node.x - self.goal.x) + abs(node.y - self.goal.y)
 
     # Prints table of the manhattan values
-    def print_h_maze(self, file_path):
-        loaded_file = self.file_loader(file_path)
-        loaded_array, start, end = self.parse_file(loaded_file)
-        for line in loaded_array:
+    def print_h_maze(self):
+        for line in self.maze:
             temp_str = ""
             for node in line:
-                temp_str += str(node) + " "
+                temp_str += str(node.wall) + " "
             print(temp_str)
 
     def get_neighbors(self, node):
@@ -111,16 +108,16 @@ class AStar(object):
         if node.y >= len(self.maze[0]) or node.y < 0:
             raise ValueError("The nodes y-value is outside of the matrix")
 
-        if node.y > 0:
+        if node.y > 0 and not self.maze[node.y - 1][node.x].wall:
             # North
             neighbors.append(self.maze[node.y - 1][node.x])
-        if node.x < len(self.maze[0]) - 1:
+        if node.x < len(self.maze[0]) - 1 and not self.maze[node.y][node.x + 1].wall:
             # East node
             neighbors.append(self.maze[node.y][node.x + 1])
-        if node.y < len(self.maze) - 1:
+        if node.y < len(self.maze) - 1 and not self.maze[node.y + 1][node.x].wall:
             #South node
             neighbors.append(self.maze[node.y + 1][node.x])
-        if node.x > 0:
+        if node.x > 0 and not self.maze[node.y][node.x - 1].wall:
             #West node
             neighbors.append(self.maze[node.y][node.x - 1])
 
@@ -136,23 +133,44 @@ class AStar(object):
         to_node.f = to_node.g + to_node.h
         # print_h_maze("static/board-1-1.txt")
 
+    def render_maze(self):
+        for row in self.maze:
+            string = ""
+            for node in row:
+                if node.is_in_path:
+                    string += '*'
+                else:
+                    string += node.symbol
+            print(string)
+
     def process(self):
         # Add start node to heap
         heapq.heappush(self.opened, (self.start.f, self.start))
 
         while len(self.opened):
             f, node = heapq.heappop(self.opened)
-            print(node)
             self.closed.add(node)
 
             if node is self.goal:
-                print('GOOOOOAL, A STAR COMING HOME...')
-                break
+                print('GOOOOOAL')
+
+                path = []
+                p = node
+                while p is not None:
+                    p.is_in_path = True
+                    path.append(p)
+                    p = p.parent
+
+                path.reverse()
+                self.render_maze()
+                print()
+                self.print_h_maze()
+                #print([str(node.x) + "." + str(node.y) for node in path])
 
             neighbors = self.get_neighbors(node)
 
             for neighbor in neighbors:
-                if neighbor is not neighbor.wall and neighbor not in self.closed:
+                if not neighbor.wall and neighbor not in self.closed:
                     if (neighbor.f, neighbor) in self.opened:
                         if neighbor.g > node.g + 1:
                             self.update_node(node, neighbor)
