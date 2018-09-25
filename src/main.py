@@ -1,11 +1,26 @@
 import heapq
 import math
-from PIL import Image
+from PIL import Image, ImageDraw
 
 _wall_symbol = '#'
 _start_symbol = 'A'
 _goal_symbol = 'B'
+_scale = 50
+_circle_size = 20
+_circle_color = (0,0,0)
 
+# symbol : [cost, (R,G,B)]
+_symbols = {
+    "w" : [100, (0, 0, 255)],
+    "m" : [50, (128, 128, 128)],
+    "f" : [10, (11, 102, 35)],
+    "g" : [5, (76, 187, 23)],
+    "r" : [1, (155, 118, 83)],
+    _wall_symbol : [1, (70, 70, 70)],
+    "." : [1, (255, 255, 255)],
+    _start_symbol : [1, (0, 255, 0)],
+    _goal_symbol : [1, (255, 0, 0)],
+}
 
 class Node:
 
@@ -19,6 +34,7 @@ class Node:
         self.h = 0
         self.g = 0
         self.f = 0
+        self.task_type = None
 
     def __str__(self):
         return str((self.x, self.y))
@@ -28,6 +44,7 @@ class Node:
 
 
 class AStar(object):
+
     def __init__(self, file_path):
         self.opened = []
         heapq.heapify(self.opened)
@@ -36,6 +53,8 @@ class AStar(object):
         self.goal = None
         self.maze = []
         self.maze = self.parse_file(file_path)
+        self.game_type = None
+        
 
     @staticmethod
     def file_loader(file_path):
@@ -50,6 +69,16 @@ class AStar(object):
     def parse_file(self, file_path):
         loaded_file = self.file_loader(file_path)
 
+        print(file_path.split('-'))
+
+        if file_path.split('-')[1] == '1':
+            self.game_type = 1
+        elif file_path.split('-')[1] == '2':
+            self.game_type = 2
+        else:
+            raise ValueError("Invalid filename. File cant be associated with a game mode")
+
+
         nodes = []
 
         x = 0
@@ -61,11 +90,11 @@ class AStar(object):
             for symbol in line:
                 node = Node(x, y, symbol)
                 maze_row.append(node)
-                if symbol == 'A':
+                if symbol == _start_symbol:
                     self.start = node
-                elif symbol == 'B':
+                elif symbol == _goal_symbol:
                     self.goal = node
-                elif symbol == '#':
+                elif symbol == _wall_symbol:
                     node.wall = True
                 x += 1
             nodes.append(maze_row)
@@ -114,7 +143,7 @@ class AStar(object):
 
     @staticmethod
     def update_node(from_node, to_node):
-        to_node.g = from_node.g + 1
+        to_node.g = from_node.g + _symbols[to_node.symbol][0]
         to_node.parent = from_node
         to_node.f = to_node.g + to_node.h
 
@@ -130,31 +159,43 @@ class AStar(object):
 
     def render_graphics(self):
 
-        scale = 3
-
-        img = Image.new('RGB', (len(self.maze[0])*scale, len(self.maze)*scale), "white")
+        img = Image.new('RGB', (len(self.maze[0])*_scale, len(self.maze)*_scale), "white")
         pixels = img.load()
-        center_pixel = math.floor(scale/2)
-
+        drawing = ImageDraw.Draw(img)
         for i, row in enumerate(self.maze):
             for j, node in enumerate(row):
-                if node.symbol == '#':
-                    self.scale_graphics(pixels, i, j, (105,105,105), scale)
+                if node.symbol in _symbols:
+                    color_code = self.get_node_color(node)
+                    self.draw_node(pixels, i, j, color_code)
+                else:
+                    raise ValueError("Illegal symbol detected in file")
                 if node.is_in_path:
-                    pixels[j* scale + center_pixel, i*scale+center_pixel] = (0, 0, 255)
-
-        # start
-        self.scale_graphics(pixels,self.start.y, self.start.x,(0, 255, 0), scale)
-        # goal
-        self.scale_graphics(pixels, self.goal.y, self.goal.x, (255, 0, 0), scale)
-
+                    self.draw_circles(drawing, i, j)
         img.show()
 
     @staticmethod
-    def scale_graphics(pixels, i, j, color, scale):
-        for n in range(scale):
-            for m in range(scale):
-                pixels[scale * j + n, scale * i + m] = color
+    def get_node_cost(node):
+        return _symbols[node.symbol][0]
+
+    @staticmethod
+    def get_node_color(node):
+        return _symbols[node.symbol][1]
+
+    @staticmethod
+    def draw_circles(drawing, i, j):
+        padding = (_scale - _circle_size) / 2
+        x1 = j * _scale + padding
+        y1 = i * _scale + padding
+        x2 = j * _scale + _scale + (1 - padding)
+        y2 = i * _scale + _scale + (1 - padding)
+        drawing.ellipse((x1, y1, x2, y2), _circle_color)
+
+
+    @staticmethod
+    def draw_node(pixels, i, j, color):
+        for n in range(_scale):
+            for m in range(_scale):
+                pixels[_scale * j + n, _scale * i + m] = color
 
     def process(self):
         # Add start node to heap
@@ -175,14 +216,13 @@ class AStar(object):
                 path.reverse()
                 self.render_terminal()
                 self.render_graphics()
-                #print([str(node.x) + "." + str(node.y) for node in path])
 
             neighbors = self.get_neighbors(node)
 
             for neighbor in neighbors:
                 if not neighbor.wall and neighbor not in self.closed:
                     if (neighbor.f, neighbor) in self.opened:
-                        if neighbor.g > node.g + 1:
+                        if neighbor.g > node.g + _symbols[neighbor.symbol][0]:
                             self.update_node(node, neighbor)
                     else:
                         self.update_node(node, neighbor)
@@ -190,7 +230,7 @@ class AStar(object):
 
 
 if __name__ == '__main__':
-    a_star = AStar("static/board-1-1.txt")
+    a_star = AStar("static/board-2-2.txt")
     a_star.process()
 
     # http://mat.uab.cat/~alseda/MasterOpt/AStar-Algorithm.pdf
