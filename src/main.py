@@ -1,7 +1,7 @@
 import heapq
-import math
 from PIL import Image, ImageDraw
 
+#Global variables for changing layout and preferences
 _wall_symbol = '#'
 _start_symbol = 'A'
 _goal_symbol = 'B'
@@ -9,7 +9,8 @@ _scale = 50
 _circle_size = 20
 _circle_color = (0,0,0)
 
-# symbol : [cost, (R,G,B)]
+# Dictionary storing what cost symbols maps to and which color they are to be rendered in
+# {symbol : [cost, (R,G,B)]}
 _symbols = {
     "w" : [100, (0, 0, 255)],
     "m" : [50, (128, 128, 128)],
@@ -53,11 +54,17 @@ class AStar(object):
         self.goal = None
         self.maze = []
         self.maze = self.parse_file(file_path)
-        self.game_type = None
-        
+
 
     @staticmethod
     def file_loader(file_path):
+        """
+        :param str file_path: File path to open
+        :return: List of each row with symbols of the file opened
+        :rtype: list(list(str))
+        :raises IOError: On exception from opening file at file_path
+
+        """
         try:
             f = open(file_path)
         except IOError:
@@ -66,18 +73,13 @@ class AStar(object):
         with f:
             return f.read().splitlines()
 
-    def parse_file(self, file_path):
+    def parse_file(self, file_path: str):
+        """
+        :param str file_path: File path to the file containing the maze
+        :return: A list containing a list of nodes for each row in maze
+        :rtype: list(list(Node))
+        """
         loaded_file = self.file_loader(file_path)
-
-        print(file_path.split('-'))
-
-        if file_path.split('-')[1] == '1':
-            self.game_type = 1
-        elif file_path.split('-')[1] == '2':
-            self.game_type = 2
-        else:
-            raise ValueError("Invalid filename. File cant be associated with a game mode")
-
 
         nodes = []
 
@@ -109,16 +111,31 @@ class AStar(object):
 
         return nodes
 
+
     def assign_heuristics(self):
+        """
+        Iterates through each node of self.maze and assigns node.h value
+        """
         for line in self.maze:
             for node in line:
                 node.h = self.heuristics(node, self.goal)
 
     # Generate manhattan heuristic from  coordinates of current node and goal node
     def heuristics(self, node):
+        """
+        :param Node node: Node which is to be calculated heuristic values for
+        :return: Manhattan heuristic value of node
+        :rtype: int
+        """
         return abs(node.x - self.goal.x) + abs(node.y - self.goal.y)
 
     def get_neighbors(self, node):
+        """
+        :param Node node: Node whose neighbors is to be found
+        :return: List of nodes that are adjacent(neighbors) to the param node
+        :rtype: list(Node)
+        """
+
         neighbors = []
 
         if node.x >= len(self.maze[0]) or node.x < 0:
@@ -127,7 +144,7 @@ class AStar(object):
             raise ValueError("The nodes y-value is outside of the matrix")
 
         if node.y > 0 and not self.maze[node.y - 1][node.x].wall:
-            # North
+            # North node
             neighbors.append(self.maze[node.y - 1][node.x])
         if node.x < len(self.maze[0]) - 1 and not self.maze[node.y][node.x + 1].wall:
             # East node
@@ -143,25 +160,24 @@ class AStar(object):
 
     @staticmethod
     def update_node(from_node, to_node):
+        """
+        Updates g, f of to_node and sets from_node as to_nodes parent
+        :param Node from_node: Parent node
+        :param Node to_node: Node to be updated
+        """
         to_node.g = from_node.g + _symbols[to_node.symbol][0]
         to_node.parent = from_node
         to_node.f = to_node.g + to_node.h
 
-    def render_terminal(self):
-        for row in self.maze:
-            string = ""
-            for node in row:
-                if node.is_in_path:
-                    string += '*'
-                else:
-                    string += node.symbol
-            print(string)
-
     def render_graphics(self):
-
+        """ Renders the maze with shortest solution graphically
+        :raises: ValueError: on symbols which can't be determined because it's not in _symbols
+        """
         img = Image.new('RGB', (len(self.maze[0])*_scale, len(self.maze)*_scale), "white")
         pixels = img.load()
         drawing = ImageDraw.Draw(img)
+
+        # enumerate through each node of self.maze
         for i, row in enumerate(self.maze):
             for j, node in enumerate(row):
                 if node.symbol in _symbols:
@@ -169,70 +185,116 @@ class AStar(object):
                     self.draw_node(pixels, i, j, color_code)
                 else:
                     raise ValueError("Illegal symbol detected in file")
+                # Draw circles on nodes that are in the solution path
                 if node.is_in_path:
                     self.draw_circles(drawing, i, j)
         img.show()
 
     @staticmethod
     def get_node_cost(node):
+        """
+        :param Node node: node which cost is to be returned
+        :return: returns cost of moving past this node. i.e. more costly to move across water than road
+        :rtype: int
+        """
         return _symbols[node.symbol][0]
 
     @staticmethod
     def get_node_color(node):
+        """
+        Find what color is to be rendered for given node
+        :param Node node: Node which is to be rendered
+        :return: RGB color code for node
+        :rtype: int
+        """
         return _symbols[node.symbol][1]
 
     @staticmethod
-    def draw_circles(drawing, i, j):
+    def draw_circles(drawing, y, x):
+        """
+        Draw circles on given positions of given a Drawing object
+        :param Drawing drawing: PIL.ImageDraw.Draw
+        :param int y: y value of node when maze is scaled to be 1px for each node.
+        :param int x: x value of node when maze is scaled to be 1px for each node.
+        """
         padding = (_scale - _circle_size) / 2
-        x1 = j * _scale + padding
-        y1 = i * _scale + padding
-        x2 = j * _scale + _scale + (1 - padding)
-        y2 = i * _scale + _scale + (1 - padding)
+        x1 = x * _scale + padding
+        y1 = y * _scale + padding
+        x2 = x * _scale + _scale + (1 - padding)
+        y2 = y * _scale + _scale + (1 - padding)
         drawing.ellipse((x1, y1, x2, y2), _circle_color)
 
 
     @staticmethod
-    def draw_node(pixels, i, j, color):
+    def draw_node(pixels, y, x, color):
+        """
+        Iterate through range of pixels and color them in a given color
+        :param PIL.Image.Pixels pixels: pixel schema
+        :param y: y value of node when maze is scaled to be 1px for each node.
+        :param x: x value of node when maze is scaled to be 1px for each node.
+        :param (int,int,int) color: RGB color code to paint given pixels with
+        """
         for n in range(_scale):
             for m in range(_scale):
-                pixels[_scale * j + n, _scale * i + m] = color
+                pixels[_scale * x + n, _scale * y + m] = color
+
+    @staticmethod
+    def trace_shortest_path(node):
+        """
+        :param Node node: The goal node of the maze
+        :return: returns an ordered list of the nodes in the optimal path through maze
+        :rtype: list(Node)
+        """
+        path = []
+        p = node
+        # Trace back path
+        while p is not None:
+            p.is_in_path = True
+            path.append(p)
+            p = p.parent
+        path.reverse()
+
+        return path
 
     def process(self):
+        """
+        The "engine" running the a star algorithm
+        """
         # Add start node to heap
         heapq.heappush(self.opened, (self.start.f, self.start))
 
+        # While there are nodes in opened
         while len(self.opened):
             f, node = heapq.heappop(self.opened)
             self.closed.add(node)
 
+            # If node is the goal node
             if node is self.goal:
-                path = []
-                p = node
-                while p is not None:
-                    p.is_in_path = True
-                    path.append(p)
-                    p = p.parent
-
-                path.reverse()
-                self.render_terminal()
+                self.trace_shortest_path(node)
+                print("Rendering graphics...")
                 self.render_graphics()
 
             neighbors = self.get_neighbors(node)
 
             for neighbor in neighbors:
+                # If node is not visited or a wall
                 if not neighbor.wall and neighbor not in self.closed:
+                    # If node is already opened, but not visited
                     if (neighbor.f, neighbor) in self.opened:
-                        if neighbor.g > node.g + _symbols[neighbor.symbol][0]:
+                        # If this path to neighbor is shorter than previously found
+                        if neighbor.g > node.g + self.get_node_cost(node):
+                            #Update neighbor with node as parent and update f and g
                             self.update_node(node, neighbor)
+                    # Node is not earlier visited
                     else:
+                        # Give neighbor an f and g value and set node as parent
                         self.update_node(node, neighbor)
                         heapq.heappush(self.opened, (neighbor.f, neighbor))
 
 
 if __name__ == '__main__':
+    """
+    Executing the program
+    """
     a_star = AStar("static/board-2-2.txt")
     a_star.process()
-
-    # http://mat.uab.cat/~alseda/MasterOpt/AStar-Algorithm.pdf
-    # https://www.redblobgames.com/pathfinding/a-star/introduction.html
-    # https://www.laurentluce.com/posts/solving-mazes-using-python-simple-recursivity-and-a-search/
