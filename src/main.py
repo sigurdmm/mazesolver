@@ -1,6 +1,6 @@
 import heapq
 from PIL import Image, ImageDraw
-import sys
+import os
 
 #Global variables for changing layout and preferences
 _wall_symbol = '#'
@@ -20,6 +20,7 @@ _symbols = {
     "r" : [1, (155, 118, 83)],
     _wall_symbol : [1, (70, 70, 70)],
     "." : [1, (255, 255, 255)],
+    " " : [1, (255, 255, 255)],
     _start_symbol : [1, (0, 255, 0)],
     _goal_symbol : [1, (255, 0, 0)],
 }
@@ -55,6 +56,7 @@ class AStar(object):
         self.goal = None
         self.maze = []
         self.maze = self.parse_file(file_path)
+        self.file_path = file_path
 
 
     @staticmethod
@@ -273,7 +275,7 @@ class AStar(object):
             # If node is the goal node
             if node is self.goal:
                 self.trace_shortest_path(node)
-                print("Rendering graphics...")
+                print("Rendering " + self.file_path.split('/')[-1])
                 self.render_graphics()
 
             neighbors = self.get_neighbors(node)
@@ -298,21 +300,15 @@ if __name__ == '__main__':
     """
     Executing the program
     """
-    arguments = sys.argv
-    if len(arguments) > 1:
-        for argument in arguments:
-            if not argument.endswith('.py'):
-                a_star = AStar('static/' + argument)
+
+    maze_files = os.listdir(os.getcwd() + '/mazes')
+    # For each file in mazes/ solve maze
+    if maze_files:
+        for filename in maze_files:
+            if filename.endswith('.txt'):
+                a_star = AStar('mazes/' + filename)
                 a_star.process()
     else:
-        while True:
-            print("Enter file name of a file stored in static/")
-            file_path = 'static/' + input("file name >>> ")
-            if file_path.lower() == "exit":
-                sys.exit()
-            try:
-                a_star = AStar(file_path)
-                a_star.process()
-            except:
-                raise IOError("Error loading file")
+        print("No mazes found in the directory mazesolver/mazes/")
 
+    print("All files rendered successfully")
