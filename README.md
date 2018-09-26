@@ -1,17 +1,22 @@
 
 # Maze solver
 
-## Install
-#### Install pipenv
+## About project
+
+This is the 2nd assignment in the course `TDT4136 - Introduction to Artificial Intelligence` at NTNU. 
+
+## Installation
+### Install pipenv
 
 This project uses `pipenv`to handle dependencies and virtual environments. Make sure you have [pipenv](https://github.com/pypa/pipenv#installation) installed before proceeding.
 
-#### Install dependencies 
+### Install dependencies 
 ```
 cd mazesolver
 pipenv install
 ```
-
+  
+  
 ## Maze file format
 Maze file must be a `.txt` file consisting of only the following characters and each row must 
 consist of **exactly** the same amount of characters.
@@ -33,8 +38,7 @@ r : Roads,      cost = 1
 (*) = Mandatory characters which can only appear once in the document.
 Without character an IOError will be raised.
 ```
-
-
+<br>
 
 ## Solve mazes
 
@@ -51,4 +55,41 @@ Run the `main.py` file by running the following command in the shell:
 ```
 python3 src/main.py
 ```
+
+
+
+## Example file and rendering:
+
+### Example 1
+```
+A.#.......#......#..
+#.#.#####.#.####.#..
+..#.....#.#....#....
+.##.###.######.#####
+..#.B#..#....#...#..
+#.####.##.##.#.#.##.
+...........#...#....
+
+```
+![Image not available](examples/rendered_maze.png)
+
+
+### Example 2
+
+```
+wwwwwggggggggggggggggggggggggggggggrrrrr
+wwwwwwwgggggggggggggggggggggwwwwwgrrgggg
+wwwwwwwwwwwgggAgggggggwwwwwwwwwwwwrwgggg
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwrwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwrwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwrrwwwww
+wwwwwwwwgggggBgggggwwwwwwwwwwwwwwrwwwwww
+wwwwggggggffffffgggggggggwwwwwwwwrwwwwww
+wwggggffffffffffffffggggggggggggrrgwwwww
+wgggfffrrrrrrrrrrrrrrrrrrrrrrrrrrggggggg
+
+```
+
+![Image not available](examples/rendered_maze_2.png)
+
 
