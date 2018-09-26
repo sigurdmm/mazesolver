@@ -15,7 +15,22 @@ This project uses `pipenv`to handle dependencies and virtual environments. Make 
 cd mazesolver
 pipenv install
 ```
-  
+## Solve mazes
+
+### 1) Store mazes in `static/`
+Store the mazes to be solved in `mazesolver/mazes/`. Every file in this folder will be read as a maze, 
+so be sure to only store valid maze files here.
+
+### 2) Open shell
+```
+pipenv shell
+```
+### 3) Run main.py from shell
+Run the `main.py` file by running the following command in the shell:
+```
+python3 src/main.py
+```
+
   
 ## Maze file format
 Maze file must be a `.txt` file consisting of only the following characters and each row must 
@@ -38,25 +53,6 @@ r : Roads,      cost = 1
 (*) = Mandatory characters which can only appear once in the document.
 Without character an IOError will be raised.
 ```
-<br>
-
-## Solve mazes
-
-### 1) Store mazes in `static/`
-Store the mazes to be solved in `mazesolver/mazes/`. Every file in this folder will be read as a maze, 
-so be sure to only store valid maze files here.
-
-### 2) Open shell
-```
-pipenv shell
-```
-### 3) Run main.py from shell
-Run the `main.py` file by running the following command in the shell:
-```
-python3 src/main.py
-```
-
-
 
 ## Example file and rendering:
 
