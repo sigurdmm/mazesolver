@@ -1,5 +1,6 @@
 import heapq
 from PIL import Image, ImageDraw
+import sys
 
 #Global variables for changing layout and preferences
 _wall_symbol = '#'
@@ -78,6 +79,7 @@ class AStar(object):
         :param str file_path: File path to the file containing the maze
         :return: A list containing a list of nodes for each row in maze
         :rtype: list(list(Node))
+        :raises IOError: on start node and/or goal node not found in maze
         """
         loaded_file = self.file_loader(file_path)
 
@@ -296,5 +298,21 @@ if __name__ == '__main__':
     """
     Executing the program
     """
-    a_star = AStar("static/board-2-2.txt")
-    a_star.process()
+    arguments = sys.argv
+    if len(arguments) > 1:
+        for argument in arguments:
+            if not argument.endswith('.py'):
+                a_star = AStar('static/' + argument)
+                a_star.process()
+    else:
+        while True:
+            print("Enter file name of a file stored in static/")
+            file_path = 'static/' + input("file name >>> ")
+            if file_path.lower() == "exit":
+                sys.exit()
+            try:
+                a_star = AStar(file_path)
+                a_star.process()
+            except:
+                raise IOError("Error loading file")
+
