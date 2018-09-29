@@ -192,7 +192,7 @@ class AStar(object):
                 # Draw circles on nodes that are in the solution path
                 if node.is_in_path:
                     self.draw_circles(drawing, i, j)
-        img.show()
+        img.save(f'./solved_mazes/{self.file_path.replace("mazes/", "").replace(".txt", ".png")}')
 
     @staticmethod
     def get_node_cost(node):
