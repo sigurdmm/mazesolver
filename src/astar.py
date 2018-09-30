@@ -47,20 +47,20 @@ class AStar(object):
         if node.y >= len(self.maze[0]) or node.y < 0:
             raise ValueError("The nodes y-value is outside of the matrix")
 
-
+        # North node
         if node.y > 0:
-            # North node
             neighbors.append(self.maze[node.y - 1][node.x])
+        # East node
         if node.x < len(self.maze[0]) - 1:
-            # East node
             neighbors.append(self.maze[node.y][node.x + 1])
+        #South node
         if node.y < len(self.maze) - 1:
-            #South node
             neighbors.append(self.maze[node.y + 1][node.x])
+        #West node
         if node.x > 0:
-            #West node
             neighbors.append(self.maze[node.y][node.x - 1])
 
+        # Remove neighbors that is walls from the return list
         neighbors = self.remove_walls(neighbors)
 
         return neighbors
