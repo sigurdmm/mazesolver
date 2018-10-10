@@ -17,7 +17,7 @@ pipenv install
 ```
 ## Solve mazes
 
-### 1) Store mazes in `static/`
+### 1) Store mazes in `mazes`
 Store the mazes to be solved in `mazesolver/mazes/`. Every file in this folder will be read as a maze, 
 so be sure to only store valid maze files here.
 
@@ -30,6 +30,7 @@ Run the `main.py` file by running the following command in the shell:
 ```
 python3 src/main.py
 ```
+Solved mazes are stored in `solved_mazes/`
 
   
 ## Maze file format
